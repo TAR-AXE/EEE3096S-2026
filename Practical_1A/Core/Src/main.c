@@ -26,6 +26,7 @@
 #include <stm32f0xx_ll_system.h>
 #include <stm32f0xx_ll_rcc.h>
 
+
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
@@ -39,6 +40,7 @@ TIM_HandleTypeDef htim16;
 /*Define the LED*/
 #define LED_PIN GPIO_PIN_0
 #define LED_PORT GPIOB
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -110,6 +112,7 @@ static void MX_TIM16_Init(void)
   htim16.Init.Prescaler = 7999; // insert your psc value
   htim16.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim16.Init.Period = 999;      // insert your calculated period or ARR
+
   htim16.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim16.Init.RepetitionCounter = 0;
   htim16.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
@@ -135,6 +138,7 @@ static void MX_GPIO_Init(void)
     HAL_GPIO_Init(LED_PORT, &GPIO_InitStruct);
 
     HAL_GPIO_WritePin(LED_PORT, LED_PIN, GPIO_PIN_RESET);
+
 }
 
 /**
@@ -145,6 +149,7 @@ void TIM16_IRQHandler(void)
 /*Toggle the pin*/
 HAL_TIM_IRQHandler(&htim16);
 HAL_GPIO_TogglePin(LED_PORT, LED_PIN);
+
 }
 
 /**
