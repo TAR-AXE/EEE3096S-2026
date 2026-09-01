@@ -1,59 +1,68 @@
 /*
- * dsp.s
- * EEE3096S 2026 - Practical 1B, Task 4
- * Cycle-counted ADC to DAC loop with a 45 degree phase delay
- *
- * Student 1 : <name>  <student number>
- * Student 2 : <name>  <student number>
+ * Task 4: Assembly Cycle-Counted Phase Delay
+ * System Clock: 8 MHz HSI Oscillator (1 cycle = 125 ns)
+ * Target Delay: 125 us (45 degrees phase shift for a 1 kHz sine wave)
  */
 
     .syntax unified
+    .cpu cortex-m0plus
     .thumb
-    .cpu    cortex-m0
-    .fpu    softvfp
 
     .global DSP_Loop
-    .type   DSP_Loop, %function
+    .type DSP_Loop, %function   @ Informs the linker that DSP_Loop is a function
 
-@ ---------------------------------------------------------------------------
-@ Peripheral addresses
-@ ---------------------------------------------------------------------------
-    .equ ADC_DR,      0x40012440
-    .equ DAC_DHR12R1, 0x40007408
+// Peripheral base register address definitions (STM32F0 series)
+.equ ADC_DR_ADDR,   0x40012440    // ADC Data Register (ADC1->DR)
+.equ DAC_DHR_ADDR,  0x40007408    // DAC Channel 1 12-bit Right-Aligned Data Holding Register (DAC->DHR12R1)
 
-    .section .text.DSP_Loop, "ax", %progbits
+    .section .text
+    .align 2
+    .thumb_func                   @ Required for Cortex-M: Marks target symbol as Thumb
 
-@ ===========================================================================
-@ ENTRY POINT
-@ ===========================================================================
 DSP_Loop:
-    @ Setup registers outside the timed loop
-    LDR R0, =ADC_DR
-    LDR R1, =DAC_DHR12R1
+    // Load peripheral register addresses into registers once
+    LDR R0, =ADC_DR_ADDR
+    LDR R1, =DAC_DHR_ADDR
 
-loop:
-    @ --- SAMPLE AND OUTPUT ------------------------------------------------
-    @ TODO 1: Read the current ADC conversion from the Data Register.
-    
-    @ TODO 2: Write the value straight out to the DAC Data Register.
+dsp_polling_loop:
+    // -------------------------------------------------------------------------
+    // 1. Read sampled value from ADC
+    // -------------------------------------------------------------------------
+    LDR R3, [R0]             // Load sample from ADC_DR into R3         [2 cycles]
 
-    @ --- DELAY SETUP ------------------------------------------------------
-    @ TODO 3: Calculate the required cycle target for a 45-degree phase 
-    @         delay on a 1 kHz sine wave running at an 8 MHz system clock.
-    @         Load your inner loop counter and insert any NOP padding 
-    @         needed to hit your exact target.
+    // -------------------------------------------------------------------------
+    // 2. Cycle-counted software delay loop
+    //    Target delay loop duration = 989 cycles
+    //    Loop Body: SUBS (1 cycle) + BNE (2 cycles taken, 1 cycle untaken)
+    //    Total Loop Time = (330 * 3) - 1 = 989 cycles
+    // -------------------------------------------------------------------------
+    LDR R4, =330             // Initialize counter N = 330              [2 cycles]
 
 delay_loop:
-    @ --- INNER LOOP -------------------------------------------------------
-    @ TODO 4: Implement the counted delay loop.
-    @         (Remember to use flag-updating arithmetic so your branch works).
+    SUBS R4, R4, #1          // Decrement R4                            [1 cycle]
+    BNE  delay_loop          // Branch if R4 != 0                       [2 cycles taken, 1 untaken]
 
-    @ --- REPEAT -----------------------------------------------------------
-    @ TODO 5: Branch back to the start of the main 'loop'.
-    
-    @ ----------------------------------------------------------------------
-    @ NOTE: You must calculate your exact cycle budget, showing the cost 
-    @ of every instruction and loop iteration, and document it in your report.
-    @ ----------------------------------------------------------------------
+    NOP                      // Pad 1 cycle                             [1 cycle]
+    NOP                      // Pad 1 cycle                             [1 cycle]
 
-    .size DSP_Loop, .-DSP_Loop
+    // -------------------------------------------------------------------------
+    // 3. Write sample directly to DAC
+    // -------------------------------------------------------------------------
+    STR R3, [R1]             // Output R3 sample value to DAC_DHR12R1   [2 cycles]
+
+    // -------------------------------------------------------------------------
+    // 4. Repeat polling loop indefinitely
+    // -------------------------------------------------------------------------
+    B   dsp_polling_loop     // Branch back to start of loop           [3 cycles]
+
+    // -------------------------------------------------------------------------
+    // CYCLE BUDGET SUMMARY:
+    //  ADC Read (LDR):              2 cycles
+    //  Delay Load (LDR):            2 cycles
+    //  Delay Loop:                989 cycles  ((330 * 3) - 1)
+    //  NOP Padding:                 2 cycles  (1 + 1)
+    //  DAC Write (STR):             2 cycles
+    //  Loop Branch (B):             3 cycles
+    // -------------------------------------------------------------------------
+    //  TOTAL ITERATION TIME:     1000 cycles
+    //  1000 cycles * 125 ns = 125.00 us (Exact 45-degree phase delay)

@@ -1,4 +1,4 @@
-/* USER CODE BEGIN Header */
+//* USER CODE BEGIN Header */
 /**
   ******************************************************************************
   * EEE3096S 2026 - Practical 1B
@@ -81,17 +81,10 @@ int main(void)
    * TODO 1
    * Start the ADC in continuous mode and start DAC channel 1, then hand
    * over to the Assembly loop.
-   *
-   * HAL_ADC_Start(&hadc);
-   * HAL_DAC_Start(&hdac1, DAC_CHANNEL_1);
-   * DSP_Loop();
-   *
-   * Two settings in the .ioc decide whether this works at all:
-   *   Continuous Conversion Mode must be Enabled, or the ADC converts once
-   *   and stops, and your DAC output sits flat.
-   *   Overrun must be set to "Overrun data overwritten", or the ADC halts
-   *   the moment your Assembly reads it slower than it converts.
    */
+  HAL_ADC_Start(&hadc);
+  HAL_DAC_Start(&hdac1, DAC_CHANNEL_1);
+  DSP_Loop();
 
 #elif (ACTIVE_TASK == 5)
 
