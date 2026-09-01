@@ -106,27 +106,34 @@ static void timing_timer_init(void)
  * ------------------------------------------------------------------------ */
 static inline uint32_t square_le(uint32_t mid, uint32_t x)
 {
-    /* TODO 8: promote to 64-bit to avoid overflow */
     return ((uint64_t)mid * mid) <= x;
 }
 
 static uint32_t isqrt(uint32_t x)
 {
-    /* TODO 9: binary search */
-    uint32_t lo = 0u;
-    uint32_t hi = (x < 65536u) ? x : 65535u;   /* max possible isqrt for 32-bit */
+    if (x <= 1u)
+        return x;
 
-    if (x == 0u) return 0u;
-    if (x == 1u) return 1u;
+    uint32_t lo = 1u;
+    uint32_t hi = x;
 
-    while (lo < hi) {
-        uint32_t mid = lo + ((hi - lo + 1u) >> 1);  /* ceiling mid */
-        if (square_le(mid, x))
-            lo = mid;
+    /* Clamp the upper bound – no 32-bit number has isqrt > 65535 */
+    if (hi > 65535u)
+        hi = 65535u;
+
+    while (lo <= hi)
+    {
+        uint32_t mid = lo + ((hi - lo) >> 1);
+        uint64_t sq  = (uint64_t)mid * mid;
+
+        if (sq == x)
+            return mid;
+        else if (sq < x)
+            lo = mid + 1u;
         else
             hi = mid - 1u;
     }
-    return lo;
+    return hi;   /* largest integer whose square is <= x */
 }
 
 /* ---------------------------------------------------------------------------
