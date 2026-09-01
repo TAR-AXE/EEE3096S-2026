@@ -1,0 +1,19 @@
+=== Golden Measure: integer square-root ===
+
+Ten golden outputs:
+  inputs[0] =          0  ->  isqrt =          0   OK
+  inputs[1] =          1  ->  isqrt =          1   OK
+  inputs[2] =         15  ->  isqrt =          3   OK
+  inputs[3] =         16  ->  isqrt =          4   OK
+  inputs[4] =       4095  ->  isqrt =         63   OK
+  inputs[5] =      65535  ->  isqrt =        255   OK
+  inputs[6] =  123456789  ->  isqrt =      11111   OK
+  inputs[7] =  987654321  ->  isqrt =      31426   OK
+  inputs[8] = 4294836225  ->  isqrt =      65535   OK
+  inputs[9] = 4294967295  ->  isqrt =      65535   OK
+
+Timing (average per call):
+  100000 outer repetitions  ->  0.0034 µs / call
+  1000000 outer repetitions  ->  0.0028 µs / call
+
+Done.
